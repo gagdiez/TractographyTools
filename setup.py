@@ -16,5 +16,5 @@ setup(name=package_name,
       author_email='gallardo@cbs.mpg.de',
       include_package_data=True,
       packages=[cli_module],
-      scripts=['scripts/tt_csd_shm'],
+      scripts=['scripts/tt_csd'],
       zip_safe=False)
