@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+''' Command Line Interface of seeds_from_labeled_volume '''
+import argparse
+from tractools.cli.seeds_from_labeled_volume import seeds_from_labeled_volume
+
+
+if __name__ == "__main__":
+    # Parser
+    parser = argparse.ArgumentParser(description='Seeds creator')
+
+    parser.add_argument('labeled_file', type=str,
+                        help='Labeled volume from where to extract the seeds')
+
+    parser.add_argument('labels_file', type=str,
+                        help='File with the labels to use and their respective\
+                              structure')
+
+    parser.add_argument('seeds_per_voxel', type=int,
+                        help='Number of seeds per voxel')
+
+    parser.add_argument('outfile', type=str,
+                        help='Text file with the position of each seed')
+
+    parser.add_argument('-mask', dest='mask_file', type=str,
+                        help='If present, only the labels which intersect with\
+                              the mask will be used as seeds')
+
+    parser.add_argument('-border', action='store_true',
+                        help='Only use the border of the regions as seeds')
+
+    parser.add_argument('-vox', dest='vox', type=int, default=0,
+                        help='How many mm to expand the labels in the mask')
+
+    parser.add_argument('-vol_out', dest='vol_out', type=str,
+                        help="Labeled volume with seeds' positions")
+
+    parser.add_argument('-verbose', action='store_true')
+
+    args = parser.parse_args()
+
+    seeds_from_labeled_volume(args.labeled_file, args.labels_file,
+                              args.seeds_per_voxel, args.outfile,
+                              args.mask_file, args.vox, args.border,
+                              args.vol_out, args.verbose)
