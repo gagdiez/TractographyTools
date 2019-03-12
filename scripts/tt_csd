@@ -38,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('-npeaks', type=int, default=5,
                         help='Number of peaks per voxel')
 
-    parser.add_argument('-min_separation', type=float,
+    parser.add_argument('-min_separation', type=float, default=30,
                         help='Minimum angle between peaks (0 - 90 degrees)')
 
     parser.add_argument('-normalize', action='store_true',
