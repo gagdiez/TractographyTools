@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import logging
 
-import nibabel
 import citrix
-import numpy
+import numpy as np
+
 from scipy.ndimage import morphology
 from dipy.tracking import utils
 
@@ -30,13 +30,13 @@ def seeds_from_labeled_volume(labeled_volume_file, labels_file,
     label2structure = read_labels_file(labels_file)
 
     # Load volume with labels
-    labels_nifti = nibabel.load(labeled_volume_file)
+    labels_nifti = citrix.load(labeled_volume_file)
     labels_volume = labels_nifti.get_data()
     labels_affine = labels_nifti.affine
 
     # Load mask if any
     if mask_file:
-        mask = nibabel.load(mask_file).get_data().astype(bool)
+        mask = citrix.load(mask_file).get_data().astype(bool)
     else:
         mask = None
 
@@ -46,7 +46,7 @@ def seeds_from_labeled_volume(labeled_volume_file, labels_file,
         f.write(txtheader)
 
     # Create seeds from voxels
-    seed_volume = numpy.zeros_like(labels_volume)  # Visual confirmation
+    seed_volume = np.zeros_like(labels_volume)  # Visual confirmation
     text = ""
     label_and_nonzero = []  # Stores tuples (label, nonzero)
     for label in label2structure:
@@ -62,11 +62,11 @@ def seeds_from_labeled_volume(labeled_volume_file, labels_file,
         if only_border:
             # erode the structure one time and substract to get the border
             eroded_structure = morphology.binary_erosion(label_mask)
-            seed_structure = numpy.bitwise_xor(seed_structure, eroded_structure)
+            seed_structure = np.bitwise_xor(seed_structure, eroded_structure)
 
         # Intersect with the mask
         if mask is not None:
-            seed_structure = numpy.multiply(seed_structure, mask)
+            seed_structure = np.multiply(seed_structure, mask)
         nzr = seed_structure.nonzero()
         label_and_nonzero.append((label, nzr))
 
@@ -79,7 +79,7 @@ def seeds_from_labeled_volume(labeled_volume_file, labels_file,
         logging.debug('Procesing label: {}'.format(label))
         seed_structure = (seed_volume == label)
         nzr = seed_structure.nonzero()
-        nzr_positions = numpy.transpose(nzr)
+        nzr_positions = np.transpose(nzr)
 
         # Create seeds randomly distributed inside of each voxel
         label_seeds = utils.random_seeds_from_mask(seed_structure,
