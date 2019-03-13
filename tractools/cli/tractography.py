@@ -136,7 +136,7 @@ def tractography(shm_file, mask_file, seeds_file, outdir,
     # Numerated chunks and info: [(0, (sds0, cks0)), (1, (sds1, cks1))..]
     numerated_seeds_chunks = list(enumerate(zip(seed_chunks, info_chunks)))
 
-    logging.debug("Starting multiprocessing environment")
+    logging.debug("Starting {} workers".format(nbr_process))
     pool.map(tracking_, numerated_seeds_chunks)
     pool.close()
     pool.join()
