@@ -9,9 +9,10 @@ import logging
 import numpy
 
 from dipy.direction import ProbabilisticDirectionGetter as probabilistic
-from dipy.direction import DeterministicMaximumDirectionGetter as deterministic
+from dipy.direction import ClosestPeakDirectionGetter as deterministic
 
 from .. import utils
+
 
 def tracking(shm_file, mask_file, outdir, force_overwrite,
              particles, step_size, max_lenght, max_angle, algorithm,
@@ -41,8 +42,8 @@ def tracking(shm_file, mask_file, outdir, force_overwrite,
     import streamlines as sl
 
     from dipy.data import default_sphere
-    from dipy.tracking.local import LocalTracking
-    from dipy.tracking.local import BinaryTissueClassifier
+    from dipy.tracking.local_tracking import LocalTracking
+    from dipy.tracking.stopping_criterion import BinaryStoppingCriterion
 
     wpid, (seeds, cifti_info) = wpid_seeds_info
 
@@ -68,7 +69,7 @@ def tracking(shm_file, mask_file, outdir, force_overwrite,
         directions = probabilistic.from_shcoeff(shm_data, max_angle,
                                                 default_sphere)
 
-    classifier = BinaryTissueClassifier(mask)
+    stop_criterion = BinaryStoppingCriterion(mask)
 
     percent = max(1, len(seeds)/5)
     streamlines = []
@@ -84,12 +85,12 @@ def tracking(shm_file, mask_file, outdir, force_overwrite,
             s = [s]
         repeated_seeds = itertools.cycle(s)
 
-        res = LocalTracking(directions, classifier, repeated_seeds, shm.affine,
-                            step_size=step_size, maxlen=max_lenght)
-        it = res._generate_streamlines()  # This is way faster, just remember
-                                          #  after to move them into mm space
-                                          #  again.
-        for streamline in itertools.islice(it, particles*len(s)):
+        res = LocalTracking(directions, stop_criterion,
+                            repeated_seeds, shm.affine,
+                            step_size=step_size, maxlen=max_lenght,
+                            return_all=False)
+
+        for streamline in itertools.islice(res, particles*len(s)):
             if streamline is not None and len(streamline) > 1:
                 streamlines.append(streamline)
 
@@ -98,12 +99,13 @@ def tracking(shm_file, mask_file, outdir, force_overwrite,
             else:
                 used_seeds.append([int(cf) for cf in cifti_info[i][2]])
 
-    streamlines = sl.Streamlines(streamlines, affine=shm.affine)
+    streamlines = sl.Streamlines(streamlines, shm.affine,
+                                 shm.shape[:3], shm.header.get_zooms()[:3])
 
     numpy.savetxt(os.path.join(outdir, "info_{}.txt".format(wpid)),
                   used_seeds)
-    
-    sl.io.save(streamlines, outfile, shm.shape[:3], shm.header.get_zooms()[:3])
+
+    sl.io.save(streamlines, outfile)
 
     logging.debug("Worker {} finished".format(wpid))
     return

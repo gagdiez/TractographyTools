@@ -31,7 +31,7 @@ def seeds_from_labeled_volume(labeled_volume_file, labels_file,
 
     # Load volume with labels
     labels_nifti = citrix.load(labeled_volume_file)
-    labels_volume = labels_nifti.get_data()
+    labels_volume = np.round(labels_nifti.get_fdata()).astype(int)
     labels_affine = labels_nifti.affine
 
     # Load mask if any
@@ -80,10 +80,9 @@ def seeds_from_labeled_volume(labeled_volume_file, labels_file,
         seed_structure = (seed_volume == label)
         nzr = seed_structure.nonzero()
         nzr_positions = np.transpose(nzr)
-
         # Create seeds randomly distributed inside of each voxel
-        label_seeds = utils.random_seeds_from_mask(seed_structure,
-                                                   seeds_per_voxel,
+        label_seeds = utils.random_seeds_from_mask(mask=seed_structure,
+                                                   seeds_count=seeds_per_voxel,
                                                    affine=labels_affine)
         # Add information to the output file
         structure_name = label2structure[label]
