@@ -83,7 +83,8 @@ def tracking(shm_file, mask_file, outdir, force_overwrite,
         if len(s) == 3:
             # It's one point
             s = [s]
-        repeated_seeds = itertools.cycle(s)
+
+        repeated_seeds = [ss for ss in s for _ in range(2*particles)]
 
         res = LocalTracking(directions, stop_criterion,
                             repeated_seeds, shm.affine,
@@ -139,7 +140,8 @@ def tractography(shm_file, mask_file, seeds_file, outdir,
     numerated_seeds_chunks = list(enumerate(zip(seed_chunks, info_chunks)))
 
     logging.debug("Starting {} workers".format(nbr_process))
-    pool.map(tracking_, numerated_seeds_chunks)
+    _ = pool.map(tracking_, numerated_seeds_chunks)
+
     pool.close()
     pool.join()
 
